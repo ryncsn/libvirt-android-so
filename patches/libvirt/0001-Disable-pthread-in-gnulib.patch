@@ -1,0 +1,26 @@
+From edda1aaf67f2344e32b784a5c34d2d35afa06a34 Mon Sep 17 00:00:00 2001
+From: ryncsn <ryncsn@gmail.com>
+Date: Sun, 25 Dec 2016 16:49:35 +0800
+Subject: [PATCH 1/5] Disable pthread in gnulib
+
+Not working working with Android NDK
+---
+ bootstrap.conf | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/bootstrap.conf b/bootstrap.conf
+index 0bfa794..aa75565 100644
+--- a/bootstrap.conf
++++ b/bootstrap.conf
+@@ -89,8 +89,6 @@ pipe-posix
+ pipe2
+ poll
+ posix-shell
+-pthread
+-pthread_sigmask
+ recv
+ regex
+ random_r
+-- 
+2.7.3
+

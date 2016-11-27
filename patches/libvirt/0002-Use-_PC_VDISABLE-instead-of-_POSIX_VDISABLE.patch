@@ -1,0 +1,28 @@
+From 75476b127dcf5ab54d906e6b2e327ca1a3cc4a24 Mon Sep 17 00:00:00 2001
+From: ryncsn <ryncsn@gmail.com>
+Date: Sun, 25 Dec 2016 16:50:50 +0800
+Subject: [PATCH 2/5] Use _PC_VDISABLE instead of _POSIX_VDISABLE
+
+Android don't have a _POSIX_VDISABLE but have _PC_VDISABLE
+---
+ tools/vsh.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/tools/vsh.h b/tools/vsh.h
+index 8f5d1a6..fa76dd1 100644
+--- a/tools/vsh.h
++++ b/tools/vsh.h
+@@ -33,6 +33,10 @@
+ # include <sys/stat.h>
+ # include <termios.h>
+ 
++#ifdef __ANDROID__
++#define _POSIX_VDISABLE _PC_VDISABLE
++#endif
++
+ # include "internal.h"
+ # include "virerror.h"
+ # include "virthread.h"
+-- 
+2.7.3
+

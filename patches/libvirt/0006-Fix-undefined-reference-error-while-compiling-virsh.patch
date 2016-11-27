@@ -1,0 +1,38 @@
+From 5b36f5204264f852b4868a6aaf91987ec86c25f7 Mon Sep 17 00:00:00 2001
+From: ryncsn <ryncsn@gmail.com>
+Date: Mon, 26 Dec 2016 21:32:30 +0800
+Subject: [PATCH] Fix 'undefined reference' error while compiling virsh
+
+---
+ src/Makefile.am   | 2 ++
+ tools/Makefile.am | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index d440548..e24e1b3 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -2238,6 +2238,8 @@ libvirt_la_LDFLAGS = \
+ 		-version-info $(LIBVIRT_VERSION_INFO) \
+ 		$(LIBVIRT_NODELETE) \
+ 		$(AM_LDFLAGS) \
++		$(SSH2_LIBS) \
++		$(LIBXML_LIBS) \
+ 		$(NULL)
+ libvirt_la_BUILT_LIBADD += ../gnulib/lib/libgnu.la
+ libvirt_la_LIBADD += \
+diff --git a/tools/Makefile.am b/tools/Makefile.am
+index 100e657..599317f 100644
+--- a/tools/Makefile.am
++++ b/tools/Makefile.am
+@@ -207,6 +207,7 @@ virsh_LDFLAGS = \
+ 		$(AM_LDFLAGS) 					\
+ 		$(PIE_LDFLAGS)					\
+ 		$(COVERAGE_LDFLAGS)				\
++		$(LIBXML_LIBS)					\
+ 		$(NULL)
+ virsh_LDADD =							\
+ 		$(STATIC_BINARIES)				\
+-- 
+2.7.3
+

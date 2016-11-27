@@ -1,0 +1,18 @@
+[submodule "portablexdr"]
+	path = portablexdr
+	url = https://github.com/Alexpux/portablexdr.git
+[submodule "libxml2"]
+	path = libxml2
+	url = git://git.gnome.org/libxml2
+[submodule "libgpg-error"]
+	path = libgpg-error
+	url = git://git.gnupg.org/libgpg-error.git
+[submodule "libgcrypt"]
+	path = libgcrypt
+	url = git://git.gnupg.org/libgcrypt.git
+[submodule "libssh2"]
+	path = libssh2
+	url = https://github.com/libssh2/libssh2
+[submodule "libvirt"]
+    path = libvirt
+    url = git://libvirt.org/libvirt.git

@@ -1,0 +1,30 @@
+From d6f4dbebdf1b1858e61fcac1980afeabc12261fa Mon Sep 17 00:00:00 2001
+From: ryncsn <ryncsn@gmail.com>
+Date: Sun, 25 Dec 2016 22:38:33 +0800
+Subject: [PATCH 5/5] Allow to build on Linux without libnl
+
+---
+ configure.ac | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 342db89..fdc5b4d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2410,7 +2410,12 @@ dnl netlink library
+ 
+ have_libnl=no
+ 
+-if test "$with_linux" = "yes"; then
++AC_ARG_WITH([libnl],
++            [AS_HELP_STRING([--with-libnl],
++                            [Enable libnl support @<:@default=check@:>@])],
++            [with_libnl=${withval}],[with_libnl=check])
++
++if test "$with_libnl" != "no" && "$with_linux" = "yes"; then
+     # When linking with netcf, we must ensure that we pick the same version
+     # of libnl that netcf picked.  Prefer libnl-3 unless we can prove
+     # netcf linked against libnl-1, or unless the user set LIBNL_CFLAGS.
+-- 
+2.7.3
+
