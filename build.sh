@@ -36,6 +36,17 @@ while [ $# -gt 0 ]; do
             NDK_PATH=$2
             shift
             ;;
+        --clean )
+            for i in $(ls); do
+                if [ $i != 'patches' ] && [ -d $i ]; then
+                    pushd $i
+                    echo "Cleaning $i..."
+                    git reset --hard 1> /dev/null && git clean -xdf 1> /dev/null
+                    popd
+                fi
+            done
+            shift
+            ;;
         * )
             echo "Unrecognized $1"
             exit 1
