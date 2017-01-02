@@ -1,0 +1,156 @@
+From 406c9ea6d03717577d4c3641f72e9428226f83df Mon Sep 17 00:00:00 2001
+From: ryncsn <ryncsn@gmail.com>
+Date: Mon, 2 Jan 2017 19:34:02 +0800
+Subject: [PATCH] Fix: Android don-t have getgrgid_r and getpwuid_r
+
+Thoese API was not introduced until Android N
+---
+ src/util/virutil.c | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 111 insertions(+)
+
+diff --git a/src/util/virutil.c b/src/util/virutil.c
+index 0291378..b7e445e 100644
+--- a/src/util/virutil.c
++++ b/src/util/virutil.c
+@@ -757,6 +757,83 @@ virGetUserDirectory(void)
+ /* Look up fields from the user database for the given user.  On
+  * error, set errno, report the error if not instructed otherwise via @quiet,
+  * and return -1.  */
++
++#ifdef __ANDROID__
++
++static int
++virGetUserEnt(uid_t uid, char **name, gid_t *group, char **dir, char **shell, bool quiet)
++{
++    struct passwd *pw = NULL;
++    int ret = -1;
++
++    if (name)
++        *name = NULL;
++    if (dir)
++        *dir = NULL;
++    if (shell)
++        *shell = NULL;
++
++    /*
++     * From the manpage (terrifying but true):
++     *
++     * ERRORS
++     *  0 or ENOENT or ESRCH or EBADF or EPERM or ...
++     *        The given name or uid was not found.
++     */
++    if ((pw = getpwuid(uid)) == NULL) {
++        virReportSystemError(errno,
++                             _("Failed to find user record for uid '%u'"),
++                             (unsigned int) uid);
++        goto cleanup;
++    }
++
++    if (name && VIR_STRDUP(*name, pw->pw_name) < 0)
++        goto cleanup;
++    if (group)
++        *group = pw->pw_gid;
++    if (dir && VIR_STRDUP(*dir, pw->pw_dir) < 0)
++        goto cleanup;
++    if (shell && VIR_STRDUP(*shell, pw->pw_shell) < 0)
++        goto cleanup;
++
++    ret = 0;
++ cleanup:
++    if (ret < 0) {
++        if (name)
++            VIR_FREE(*name);
++        if (dir)
++            VIR_FREE(*dir);
++        if (shell)
++            VIR_FREE(*shell);
++    }
++    return ret;
++}
++
++static char *virGetGroupEnt(gid_t gid)
++{
++    char *ret;
++    struct group *gr = NULL;
++
++    /*
++     * From the manpage (terrifying but true):
++     *
++     * ERRORS
++     *  0 or ENOENT or ESRCH or EBADF or EPERM or ...
++     *        The given name or gid was not found.
++     */
++    if ((gr = getgrgid(gid)) == NULL) {
++		virReportError(VIR_ERR_SYSTEM_ERROR,
++					   _("Failed to find group record for gid '%u'"),
++					   (unsigned int) gid);
++        return NULL;
++    }
++
++    ignore_value(VIR_STRDUP(ret, gr->gr_name));
++    return ret;
++}
++
++#else /* __ANDROID__ */
++
+ static int
+ virGetUserEnt(uid_t uid, char **name, gid_t *group, char **dir, char **shell, bool quiet)
+ {
+@@ -885,6 +962,7 @@ static char *virGetGroupEnt(gid_t gid)
+     return ret;
+ }
+ 
++#endif /* __ANDROID__ */
+ 
+ char *
+ virGetUserDirectoryByUID(uid_t uid)
+@@ -1040,6 +1118,37 @@ virGetUserID(const char *user, uid_t *uid)
+ /* Search in the group database for a group id that matches the group name
+  * `name`. Returns 0 on success, -1 on failure or 1 if name cannot be found.
+  */
++#ifdef __ANDROID__
++
++static int
++virGetGroupIDByName(const char *name, gid_t *gid)
++{
++    struct group *gr = NULL;
++    int ret = -1;
++
++    if ((gr = getgrnam(name)) == NULL) {
++        if (errno != 0) {
++            char buf[1024];
++            /* log the possible error from getgrnam_r. Unfortunately error
++             * reporting from this function is bad and we can't really
++             * rely on it, so we just report that the user wasn't found */
++            VIR_WARN("Group record for user '%s' was not found: %s",
++                     name, virStrerror(errno, buf, sizeof(buf)));
++        }
++
++        ret = 1;
++        goto cleanup;
++    }
++
++    *gid = gr->gr_gid;
++    ret = 0;
++
++ cleanup:
++    return ret;
++}
++
++#else /* __ANDROID__ */
++
+ static int
+ virGetGroupIDByName(const char *name, gid_t *gid)
+ {
+@@ -1086,6 +1195,8 @@ virGetGroupIDByName(const char *name, gid_t *gid)
+     return ret;
+ }
+ 
++#endif /* __ANDROID__ */
++
+ /* Try to match a group id based on `group`. The default behavior is to parse
+  * `group` first as a group name and then as a group id. However if `group`
+  * contains a leading '+', the rest of the string is always parsed as a guid.
+-- 
+2.10.2
+
