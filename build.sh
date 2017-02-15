@@ -5,18 +5,21 @@ TOOLCHAIN='/tmp/ndk-build'
 LIBVIRT_VERSION='master'
 ANDROID_API='21'
 TARGET_ARCH='arm'
-MAKE='make -j8'
 
-HOST=$TARGET_ARCH-linux-androideabi
-PATH=$TOOLCHAIN/bin:$TOOLCHAIN/$HOST/bin:$PATH
+export MAKE='make -j8'
+export HOST=$TARGET_ARCH-linux-androideabi
+export PATH=$TOOLCHAIN/bin:$TOOLCHAIN/$HOST/bin:$PATH
 
-DEBUG_FLAGS="-g -O0"
-SYSROOT="$TOOLCHAIN/sysroot"
-LDFLAGS="-L$SYSROOT/usr/lib"
-CFLAGS="-I$SYSROOT/usr/include $DEBUG_FLAGS"
-COMMON_CONFIGURE_FLAGS="SYSROOT=$SYSROOT --host=$HOST --prefix=$SYSROOT/usr --oldincludedir=$SYSROOT/usr/include"
-LIB_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static --disable-shared"
-LIBVIRT_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static"
+export DEBUG_FLAGS="-g -O0"
+export SYSROOT="$TOOLCHAIN/sysroot"
+export LDFLAGS="-L$SYSROOT/usr/lib"
+export CFLAGS="-I$SYSROOT/usr/include $DEBUG_FLAGS"
+export PKG_CONFIG_DIR=
+export PKG_CONFIG_LIBDIR=$SYSROOT/usr/lib/pkgconfig:${SYSROOT}/usr/share/pkgconfig
+export PKG_CONFIG_SYSROOT_DIR=${SYSROOT}
+export COMMON_CONFIGURE_FLAGS="SYSROOT=$SYSROOT --host=$HOST --prefix=$SYSROOT/usr --oldincludedir=$SYSROOT/usr/include"
+export LIB_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static --disable-shared"
+export LIBVIRT_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static"
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -70,8 +73,7 @@ build_xdr(){
     pushd ./portablexdr
     git apply ../patches/portablexdr/*.patch
     autoreconf -fi
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" \
-        ./configure $LIB_CONFIGURE_FLAGS
+    ./configure $LIB_CONFIGURE_FLAGS
     $MAKE
     $MAKE install
     popd
@@ -79,8 +81,7 @@ build_xdr(){
 
 build_libxml2(){
     pushd ./libxml2
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" \
-        ./autogen.sh $LIB_CONFIGURE_FLAGS --without-lzma --without-python
+    ./autogen.sh $LIB_CONFIGURE_FLAGS --without-lzma --without-python
     $MAKE libxml2.la
     $MAKE install-data
     $MAKE install-exec
@@ -90,8 +91,7 @@ build_libxml2(){
 build_libgpg-error(){
     pushd ./libgpg-error
     ./autogen.sh --force
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" \
-        ./configure $LIB_CONFIGURE_FLAGS --enable-maintainer-mode --disable-doc
+    ./configure $LIB_CONFIGURE_FLAGS --enable-maintainer-mode --disable-doc
     $MAKE
     $MAKE install
     popd
@@ -100,8 +100,7 @@ build_libgpg-error(){
 build_libgcrypt(){
     pushd ./libgcrypt
     ./autogen.sh --force
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" \
-        ./configure $LIB_CONFIGURE_FLAGS --enable-maintainer-mode --with-libgpg-error-prefix=$SYSROOT/usr --disable-doc
+    ./configure $LIB_CONFIGURE_FLAGS --enable-maintainer-mode --with-libgpg-error-prefix=$SYSROOT/usr --disable-doc
 
     #tests are broken on android
     for dir in compat mpi cipher random src; do
@@ -118,8 +117,7 @@ build_libgcrypt(){
 build_libssh2(){
     pushd ./libssh2
     ./buildconf --force
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" \
-        ./configure $LIB_CONFIGURE_FLAGS
+    ./configure $LIB_CONFIGURE_FLAGS
     $MAKE
     $MAKE install
     popd
@@ -129,8 +127,7 @@ build_libvirt(){
     pushd ./libvirt
     git apply ../patches/libvirt/*.patch
     ./bootstrap --force
-    LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS" PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig" \
-        ./configure $LIBVIRT_CONFIGURE_FLAGS\
+    ./configure $LIBVIRT_CONFIGURE_FLAGS\
         --with-pic --without-python \
         --without-wireshark-dissector \
         --without-test --without-gnutls \
