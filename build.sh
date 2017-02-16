@@ -5,19 +5,18 @@ TOOLCHAIN='/tmp/ndk-build'
 LIBVIRT_VERSION='master'
 ANDROID_API='21'
 TARGET_ARCH='arm'
+DEBUG_FLAGS="-g -O0"
+_SYSROOT="$TOOLCHAIN/sysroot"
 
 export MAKE='make -j8'
 export HOST=$TARGET_ARCH-linux-androideabi
 export PATH=$TOOLCHAIN/bin:$TOOLCHAIN/$HOST/bin:$PATH
 
-export DEBUG_FLAGS="-g -O0"
-export SYSROOT="$TOOLCHAIN/sysroot"
-export LDFLAGS="-L$SYSROOT/usr/lib"
-export CFLAGS="-I$SYSROOT/usr/include $DEBUG_FLAGS"
+export LDFLAGS="-L$_SYSROOT/usr/lib"
+export CFLAGS="-I$_SYSROOT/usr/include $DEBUG_FLAGS"
 export PKG_CONFIG_DIR=
-export PKG_CONFIG_LIBDIR=$SYSROOT/usr/lib/pkgconfig:${SYSROOT}/usr/share/pkgconfig
-export PKG_CONFIG_SYSROOT_DIR=${SYSROOT}
-export COMMON_CONFIGURE_FLAGS="SYSROOT=$SYSROOT --host=$HOST --prefix=$SYSROOT/usr --oldincludedir=$SYSROOT/usr/include"
+export PKG_CONFIG_LIBDIR=$_SYSROOT/usr/lib/pkgconfig:${_SYSROOT}/usr/share/pkgconfig
+export COMMON_CONFIGURE_FLAGS="--host=$HOST --prefix=$_SYSROOT/usr --oldincludedir=$SYSROOT/usr/include"
 export LIB_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static --disable-shared"
 export LIBVIRT_CONFIGURE_FLAGS="$COMMON_CONFIGURE_FLAGS --enable-static"
 
@@ -117,7 +116,8 @@ build_libgcrypt(){
 build_libssh2(){
     pushd ./libssh2
     ./buildconf --force
-    ./configure $LIB_CONFIGURE_FLAGS
+    ./configure $LIB_CONFIGURE_FLAGS\
+        --without-libz
     $MAKE
     $MAKE install
     popd
