@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
             TARGET=$2
             shift
             ;;
-        --ndk-patch )
+        --ndk-path )
             NDK_PATH=$2
             shift
             ;;
